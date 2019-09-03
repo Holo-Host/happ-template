@@ -5,6 +5,29 @@ This simple Rust hApp demonstrates how to use Nix derivations to:
 - Develop using local development branches of dependencies such as holochain-rust
 - Integrate with Hydra, Circle-CI and other CI services
 
+## Nix Configuration
+
+To build a hApp using Nix and the `https://github.com/Holo-Host/holo-nixpkgs` tools, copy the
+`default.nix`, `pkgs.nix` and `shell.nix` files here, with your hApp's name substituted for the
+`happ-example` name in the files.  This enables you to build your hApp's DNA using tooling supplied
+by `holo-nixpkgs`.  Then, copy the `Makefile`, again substituting your hApp's name into the
+`DNANAME` variable.
+
+### Build release DNA
+
+Run `nix-build -A happ-example`.  Or (if you'd rather use the Makefile), enter `nix-shell`, and then
+run `make build`, or run `make nix-build` to let the Makefile execute the `nix-shell` environment
+for the `build` target on your behalf.
+
+#### Develop against a local `holochain-rust` version
+
+Run `nix-shell -I holochain-rust=../holochain-rust`, where `../holochain-rust`
+is a path to `holochain-rust` checkout. Then, develop as usual.
+
+#### Develop against built-in `holochain-rust` version
+
+See previous section, run `nix-shell` without arguments.
+
 ## Testing
 
 Holochain hApps typically use both Rust unit tests, and Javascript-based "Scenario" tests written
@@ -72,18 +95,3 @@ jobs:
           make nix-test
 ```
 
-
-## Build release DNA build
-
-Run `nix-build -A happ-example`.  Or (if you'd rather use the Makefile), enter `nix-shell`, and then
-run `make build`, or run `make nix-build` to let the Makefile execute the `nix-shell` environment
-for the `build` target on your behalf.
-
-### Develop against a local `holochain-rust` version
-
-Run `nix-shell -I holochain-rust=../holochain-rust`, where `../holochain-rust`
-is a path to `holochain-rust` checkout. Then, develop as usual.
-
-### Develop against built-in `holochain-rust` version
-
-See previous section, run `nix-shell` without arguments.

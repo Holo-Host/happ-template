@@ -1,5 +1,5 @@
 # 
-# Test and build happ-example Project.
+# Test and build a hApp
 # 
 # Building requires a nix-shell, so either prefix your desired target with `make nix-...`, or enter
 # a `nix-shell` and then run `make ...`
@@ -28,7 +28,7 @@ nix-%:
 
 # Internal targets; require a Nix environment in order to be deterministic.
 # - Uses the version of `hc`, `holochain` on the system PATH.
-# - Normally called from within a Nix environment, eg. run `nix-shell` from within holofuel
+# - Normally called from within a Nix environment, eg. run `nix-shell`
 .PHONY:		rebuild install build test test-unit test-e2e
 rebuild:	clean build
 
