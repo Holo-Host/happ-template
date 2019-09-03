@@ -1,0 +1,17 @@
+version: 2
+
+jobs:
+  build:
+    branches:
+      ignore:
+        - gh-pages
+    docker:
+      - image: nixos/nix
+    # Required because hc package default DNA name is working directory name
+    working_directory: ~/happ-example
+    steps:
+      - checkout
+      - run: |
+          nix-env -f pkgs.nix -iA git gnumake bash
+      - run: |
+          make nix-test

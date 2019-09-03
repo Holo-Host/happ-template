@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "faucet": "0.0.1"
+  },
+  "dependencies": {
+    "@holochain/try-o-rama": "0.0.2",
+    "tape": "^4.10.1",
+    "varint": "^5.0.0"
+  },
+  "scripts": {}
+}
