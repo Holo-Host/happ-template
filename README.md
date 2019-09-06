@@ -3,7 +3,7 @@
 This simple Rust hApp demonstrates how to use Nix derivations to:
 - Build the hApp DNA locally, or via use of the hApp's Nix expression in another project
 - Develop using local development branches of dependencies such as holochain-rust
-- Integrate with Hydra, Circle-CI and other CI services
+- Integrate with Hydra, CircleCI and other CI services
 
 ## Nix Configuration
 
@@ -70,7 +70,7 @@ the required NodeJS `npm` artifacts, and an `index.js` containing the Scenario t
 found, the underlying `holo-nixpkgs` Nix configuration will direct the Hydra server to execute the
 tests.
 
-#### Circle-CI
+#### CircleCI
 
 A `.circleci/config.yml` is used to execute the Makefile's `test` target.  The `cache.holo.host` and
 `cache.nixos.org` binary caches are used to accelerate the process of obtaining the build artifacts.
