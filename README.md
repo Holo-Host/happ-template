@@ -95,3 +95,4 @@ jobs:
           make nix-test
 ```
 
+Holochain hApps typically use Javascript-based "Scenario" tests written using Try-o-rama.  

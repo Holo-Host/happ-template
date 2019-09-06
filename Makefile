@@ -1,9 +1,8 @@
-# 
 # Test and build a hApp
-# 
+#
 # Building requires a nix-shell, so either prefix your desired target with `make nix-...`, or enter
 # a `nix-shell` and then run `make ...`
-# 
+
 SHELL		= bash
 DNANAME		= happ-example
 DNA		= dist/$(DNANAME).dna.json
@@ -13,18 +12,8 @@ DNA		= dist/$(DNANAME).dna.json
 all: nix-test
 
 # nix-test, nix-install, ...
-#
-# Provides a nix-shell environment, and runs the desired Makefile target, using the holo.host and
-# nixos.org binary caches.
-#
-export CACHE_KEYS
 nix-%:
-	nix-shell \
-	    --pure \
-	    --option substituters 'https://cache.holo.host https://cache.nixos.org' \
-	    --option trusted-public-keys \
-	      'cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' \
-	    --run "make $*"
+	nix-shell --pure --run "make $*"
 
 # Internal targets; require a Nix environment in order to be deterministic.
 # - Uses the version of `hc`, `holochain` on the system PATH.
@@ -51,13 +40,13 @@ test-unit:
 	    --manifest-path zomes/example/code/Cargo.toml \
 	    -- --nocapture
 
-# test-e2e -- Uses dist/$(DNANAME).dna.json; install test JS dependencies, and run end-to-end tests
+# test-e2e -- Uses dist/holofuel.dna.json; install test JS dependencies, and run end-to-end tests
 test-e2e:	$(DNA)
 	( cd test && npm install ) \
 	  && RUST_BACKTRACE=1 hc test \
 	    | test/node_modules/faucet/bin/cmd.js
 
-# doc-all, doc/*.html -- Convert any Org-mode documents to HTML
+
 .PHONY: doc-all
 doc-all: $(addsuffix .html, $(basename $(wildcard doc/*.org)))
 
