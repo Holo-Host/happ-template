@@ -47,12 +47,6 @@ test-e2e:	$(DNA)
 	    | test/node_modules/faucet/bin/cmd.js
 
 
-.PHONY: doc-all
-doc-all: $(addsuffix .html, $(basename $(wildcard doc/*.org)))
-
-doc/%.html: doc/%.org
-	emacs $< --batch -f org-html-export-to-html --kill
-
 # Generic targets; does not require a Nix environment
 .PHONY: clean
 clean:
