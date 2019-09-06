@@ -10,8 +10,7 @@ This simple Rust hApp demonstrates how to use Nix derivations to:
 To build a hApp using Nix and the `https://github.com/Holo-Host/holo-nixpkgs` tools, copy the
 `default.nix`, `pkgs.nix` and `shell.nix` files here, with your hApp's name substituted for the
 `happ-example` name in the files.  This enables you to build your hApp's DNA using tooling supplied
-by `holo-nixpkgs`.  Then, copy the `Makefile`, again substituting your hApp's name into the
-`DNANAME` variable.
+by `holo-nixpkgs`.
 
 ### Build release DNA
 
@@ -56,12 +55,6 @@ For single-user installs (`nix-shell -p nix-info --run nix-info` prints
 Otherwise, for multi-user installs, config file is in `/etc/nix/nix.conf` and
 changing it requires root access.
 
-#### Use Makefile's `nix-...` Targets
-
-The Makefile will run a `nix-shell` with the appropriate binary caches configured on your behalf, by
-executing the Makefile target prefixed by `nix-`.  For example, use `make nix-test` to run the Rust
-and Javascript Scenario tests (and the required DNA build) with the binary caches configured.
-
 ### Scenario Testing
 
 Create the Holochain scenario tests in the `test/` directory.  These can be manually executed using
@@ -77,27 +70,8 @@ tests.
 
 #### CircleCI
 
-A `.circleci/config.yml` is used to execute the Makefile's `test` target.  The `cache.holo.host` and
-`cache.nixos.org` binary caches are used to accelerate the process of obtaining the build artifacts.
-
-```
-version: 2
-
-jobs:
-  build:
-    branches:
-      ignore:
-        - gh-pages
-    docker:
-      - image: nixos/nix
-    # Required because hc package default DNA name is working directory name
-    working_directory: ~/happ-example
-    steps:
-      - checkout
-      - run: |
-          nix-env -f pkgs.nix -iA git gnumake bash
-      - run: |
-          make nix-test
-```
+[`.circleci/config.yml`](.circleci/config.yml) is used to execute `hc test`.
+The `cache.holo.host` and `cache.nixos.org` binary caches are used to
+accelerate the process of obtaining the build artifacts.
 
 Holochain hApps typically use Javascript-based "Scenario" tests written using Try-o-rama.  
