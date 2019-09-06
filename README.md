@@ -15,9 +15,7 @@ by `holo-nixpkgs`.  Then, copy the `Makefile`, again substituting your hApp's na
 
 ### Build release DNA
 
-Run `nix-build -A happ-example`.  Or (if you'd rather use the Makefile), enter `nix-shell`, and then
-run `make build`, or run `make nix-build` to let the Makefile execute the `nix-shell` environment
-for the `build` target on your behalf.
+Run `nix-build -A happ-example`.
 
 #### Develop against a local `holochain-rust` version
 
