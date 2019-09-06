@@ -40,14 +40,21 @@ rebuilding these, we can access the cached binary assets available from both `ni
 To accelerate building of the `holochain-rust` and other dependencies, configure the appropriate
 binary caches.
 
-#### Configure `~/.config/nix/nix.conf`
+#### Configure `nix.conf`
 
-To always have access to the appropriate `holo.host` and `nixos.org` binary caches, you can configure your `nix.conf`:
+To take leverage of Holo and NixOS binary caches, set `substituters` and
+`trusted-public-keys` in `nix.conf` to the following values:
 
 ```
 substituters = https://cache.holo.host/ https://cache.nixos.org/
 trusted-public-keys = cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
 ```
+
+For single-user installs (`nix-shell -p nix-info --run nix-info` prints
+`multi-user: no`), config file is in `~/.config/nix/nix.conf`.
+
+Otherwise, for multi-user installs, config file is in `/etc/nix/nix.conf` and
+changing it requires root access.
 
 #### Use Makefile's `nix-...` Targets
 
