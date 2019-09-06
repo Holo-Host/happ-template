@@ -61,13 +61,6 @@ Create the Holochain scenario tests in the `test/` directory.  These can be manu
 `make test` (remember to enter `nix-shell` first, or hit `make nix-test`.)  The `hc test` utility
 will be used to execute the tests.
 
-#### Hydra
-
-If the `test/` directory exists, it is assumed to contain a `package-lock.json` specifying all of
-the required NodeJS `npm` artifacts, and an `index.js` containing the Scenario tests to run.  If
-found, the underlying `holo-nixpkgs` Nix configuration will direct the Hydra server to execute the
-tests.
-
 #### CircleCI
 
 [`.circleci/config.yml`](.circleci/config.yml) is used to execute `hc test`.
@@ -75,3 +68,10 @@ The `cache.holo.host` and `cache.nixos.org` binary caches are used to
 accelerate the process of obtaining the build artifacts.
 
 Holochain hApps typically use Javascript-based "Scenario" tests written using Try-o-rama.  
+
+#### Hydra
+
+If the `test/` directory exists, it is assumed to contain a `package-lock.json` specifying all of
+the required NodeJS `npm` artifacts, and an `index.js` containing the Scenario tests to run.  If
+found, the underlying `holo-nixpkgs` Nix configuration will direct the Hydra server to execute the
+tests.
