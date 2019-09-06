@@ -1,5 +1,5 @@
 /dist
 /holochain-rust
-/result
-/zomes/example/code/target
+result*
+target
 node_modules/
