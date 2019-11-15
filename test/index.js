@@ -1,103 +1,143 @@
-
 /*
- * Try-o-rama Scenerio Testing
+ * Try-o-rama
  */
-const path = require('path')
-const tape = require('tape')
+const { Orchestrator, tapeExecutor, singleConductor, combine, callSync } = require('@holochain/try-o-rama')
 
-const { Orchestrator, tapeExecutor, backwardCompatibilityMiddleware } = require('@holochain/try-o-rama')
-const spawnConductor = require('./spawn_conductors')
+const MIN_EXPECTED_SCENARIOS = 1
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
   console.error('got unhandledRejection:', error);
 });
 
-const dnaPath = path.join(__dirname, "..", "dist", "happ-example.dna.json")
-const dna = Orchestrator.dna(dnaPath, 'example')
-const commonConductorConfig = {
-    instances: {
-	app: dna,
-    },
+const dumbWaiter = interval => (run, f) => run(s =>
+  f(Object.assign({}, s, {
+    consistency: () => new Promise(resolve => {
+      console.log(`dumbWaiter is waiting ${interval}ms...`)
+      setTimeout(resolve, interval)
+    })
+  }))
+                                              )
+
+
+let transport_config = 'memory';
+let middleware = combine(
+  // by default, combine conductors into a single conductor for in-memory networking
+  // NB: this middleware makes a really huge difference! and it's not very well tested,
+  // as of Oct 1 2019. So, keep an eye out.
+  singleConductor,
+  callSync,
+  tapeExecutor(require('tape')),
+);
+
+const APP_SPEC_NETWORK_TYPE = process.env.APP_SPEC_NETWORK_TYPE || "sim2h"
+
+if (APP_SPEC_NETWORK_TYPE === "websocket")
+{
+  transport_config = "websocket"
+
+  // omit singleConductor
+  middleware = combine(
+    callSync,
+    tapeExecutor(require('tape')),
+  );
+}
+else if (APP_SPEC_NETWORK_TYPE === "sim1h")
+{
+    transport_config = {
+	type: 'sim1h',
+	dynamo_url: "http://localhost:8000",
+    }
+
+    // omit singleConductor
+    middleware = combine(
+	// dumbWaiter(1000),
+	callSync,
+	tapeExecutor(require('tape')),
+    );
+}
+else if (APP_SPEC_NETWORK_TYPE === "sim2h") // default
+{
+    transport_config = {
+        type: 'sim2h',
+        sim2h_url: "wss://localhost:9000",
+    }
+
+    // omit singleConductor
+    middleware = combine(
+        // dumbWaiter(1000),
+        callSync,
+        tapeExecutor(require('tape')),
+    );
 }
 
-const debugLog = false
+// override the transport_config if we are in the Final Exam context!
+if (process.env.HC_TRANSPORT_CONFIG) {
+    transport_config=require(process.env.HC_TRANSPORT_CONFIG)
+}
 
-const orchestratorSimple = new Orchestrator({
-    conductors: {
-	alice: commonConductorConfig,
-	bob: commonConductorConfig,
-	carol: commonConductorConfig,
+
+const orchestrator = new Orchestrator({
+    middleware,
+    waiter: {
+	softTimeout: 5000,
+	hardTimeout: 10000,
     },
-    debugLog,
-    executor: tapeExecutor(tape),
-    middleware: backwardCompatibilityMiddleware,
+    globalConfig: {
+	logger: {
+            type: "debug",
+            rules: {
+		rules: [
+                    {
+			exclude: true,
+			pattern: ".*parity.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*mio.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*tokio.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*hyper.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*rusoto_core.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*want.*"
+                    },
+                    {
+			exclude: true,
+			pattern: ".*rpc.*"
+                    }
+		]
+            },
+            state_dump: true,
+	},
+	network: transport_config
+    }
 })
 
-// Basic non-scenario tests, using just plain 'tape' test harness
+// Running the whoami and asynchronous-request together seems reliable...
 
-const MIN_EXPECTED_SCENARIOS = 1
+require('./smoke')(orchestrator.registerScenario)
 
-const registerAllScenarios = () => {
-    let numRegistered = 0
-
-    const registerer = orchestrator => {
-	const f = (...info) => {
-	    numRegistered += 1
-	    return orchestrator.registerScenario(...info)
-	}
-	f.only = (...info) => {
-	    numRegistered += 1
-	    return orchestrator.registerScenario.only(...info)
-	}
-	return f
-    }
-
-    // Tee up all of the available Scenario tests
-    require('./smoke')(registerer(orchestratorSimple))
-
-    return numRegistered
+// Check to see that we haven't accidentally disabled a bunch of scenarios
+const num = orchestrator.numRegistered()
+if (num < MIN_EXPECTED_SCENARIOS) {
+  console.error(`Expected at least ${MIN_EXPECTED_SCENARIOS} scenarios, but only ${num} were registered!`)
+  process.exit(1)
+}
+else {
+  console.log(`Registered ${num} scenarios (at least ${MIN_EXPECTED_SCENARIOS} were expected)`)
 }
 
-// Alice owes fees at/above the fee payment threshold; she initiates payment of these fees.
-
-// Alice sees here .fees reduce to 0 and her .payable has increased by fees amount, then (after fee
-// collection is complete), her .balance and .payable reduces by the fee payment amount, and the fee
-// payment transaction is complete in her transaction history.
-
-const runScenarioTests = async () => {
-  const alice = await spawnConductor('alice', 3000)
-  await orchestratorSimple.registerConductor({name: 'alice', url: 'http://0.0.0.0:3000'})
-  const bob = await spawnConductor('bob', 4000)
-  await orchestratorSimple.registerConductor({name: 'bob', url: 'http://0.0.0.0:4000'})
-  const carol = await spawnConductor('carol', 5000)
-  await orchestratorSimple.registerConductor({name: 'carol', url: 'http://0.0.0.0:5000'})
-
-  const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-  console.log("Waiting for conductors to settle...")
-  await delay(5000)
-  console.log("Ok, starting tests!")
-
-  await orchestratorSimple.run()
-
-  alice.kill()
-  bob.kill()
-  carol.kill()
-}
-
-const run = async () => {
-    const num = registerAllScenarios()
-    
-    // Check to see that we haven't accidentally disabled a bunch of scenarios
-    if (num < MIN_EXPECTED_SCENARIOS) {
-	console.error(`Expected at least ${MIN_EXPECTED_SCENARIOS}, but only ${num} were registered!`)
-	process.exit(1)
-    } else {
-	console.log(`Registered ${num} scenarios (at least ${MIN_EXPECTED_SCENARIOS} were expected)`)
-    }
-
-    await runScenarioTests() // Run try-o-rama tests
-    process.exit()
-}
-
-run()
+orchestrator.run().then(stats => {
+  console.log("All done.")
+})

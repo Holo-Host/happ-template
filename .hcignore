@@ -1,5 +1,8 @@
 CONTRIBUTING.md
+Makefile
+README*
 dist
 holochain-rust
 result
 test
+vendor

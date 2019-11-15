@@ -28,7 +28,7 @@ See previous section, run `nix-shell` without arguments.
 ## Testing
 
 Holochain hApps typically use both Rust unit tests, and Javascript-based "Scenario" tests written
-using the Try-o-rama `npm` module.
+using the Try-o-rama `npm` module, and `sim2h` network/DHT simulation.
 
 ### Binary Caches
 
@@ -57,9 +57,11 @@ changing it requires root access.
 
 ### Scenario Testing
 
-Create the Holochain scenario tests in the `test/` directory.  These can be manually executed using
-`make test` (remember to enter `nix-shell` first, or hit `make nix-test`.)  The `hc test` utility
-will be used to execute the tests.
+Create the Holochain scenario tests in the `test/` directory, and use `hc test` to execute them.  If using
+`sim2h`, ensure that it is available on the expected port, eg. `sim2h_server -p 9000`.
+
+These can be manually executed using `make test` (remember to enter `nix-shell` first, or hit `make
+nix-test` to use nix-shell automatically).  The `hc test` utility will be used to execute the tests.
 
 #### CircleCI
 
