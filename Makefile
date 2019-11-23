@@ -59,7 +59,6 @@ test-e2e:	$(DNA)
 	@echo "Starting Scenario tests..."; \
 	    RUST_BACKTRACE=1 hc test \
 	        | test/node_modules/faucet/bin/cmd.js
-	@echo "*** If tests failed, see debug output in test.out~ ***"
 
 # Generic targets; does not require a Nix environment
 .PHONY: clean
