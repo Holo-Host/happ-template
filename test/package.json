@@ -3,9 +3,8 @@
     "faucet": "0.0.1"
   },
   "dependencies": {
-    "@holochain/try-o-rama": "0.0.2",
-    "tape": "^4.10.1",
-    "varint": "^5.0.0"
+    "@holochain/tryorama": "^0.2.0-rc.5",
+    "tape": "^4.11.0"
   },
   "scripts": {}
 }

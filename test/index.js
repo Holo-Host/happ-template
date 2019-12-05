@@ -1,103 +1,45 @@
+const { Orchestrator, tapeExecutor, Config, singleConductor, combine, callSync, localOnly } = require('@holochain/tryorama')
 
-/*
- * Try-o-rama Scenerio Testing
- */
-const path = require('path')
-const tape = require('tape')
-
-const { Orchestrator, tapeExecutor, backwardCompatibilityMiddleware } = require('@holochain/try-o-rama')
-const spawnConductor = require('./spawn_conductors')
+const MIN_EXPECTED_SCENARIOS = 1
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
   console.error('got unhandledRejection:', error);
 });
 
-const dnaPath = path.join(__dirname, "..", "dist", "happ-example.dna.json")
-const dna = Orchestrator.dna(dnaPath, 'example')
-const commonConductorConfig = {
-    instances: {
-	app: dna,
-    },
-}
 
-const debugLog = false
+let middleware = combine(
+  // by default, combine conductors into a single conductor for in-memory networking
+  // NB: this middleware makes a really huge difference! and it's not very well tested,
+  // as of Oct 1 2019. So, keep an eye out.
+  tapeExecutor(require('tape')),
+  localOnly,
+  callSync
+);
 
-const orchestratorSimple = new Orchestrator({
-    conductors: {
-	alice: commonConductorConfig,
-	bob: commonConductorConfig,
-	carol: commonConductorConfig,
-    },
-    debugLog,
-    executor: tapeExecutor(tape),
-    middleware: backwardCompatibilityMiddleware,
+
+const orchestrator = new Orchestrator({
+    middleware,
+    waiter: {
+	softTimeout: 5000,
+	hardTimeout: 10000,
+    }
 })
 
-// Basic non-scenario tests, using just plain 'tape' test harness
+// Running the whoami and asynchronous-request together seems reliable...
 
-const MIN_EXPECTED_SCENARIOS = 1
+require('./smoke')(orchestrator.registerScenario)
 
-const registerAllScenarios = () => {
-    let numRegistered = 0
-
-    const registerer = orchestrator => {
-	const f = (...info) => {
-	    numRegistered += 1
-	    return orchestrator.registerScenario(...info)
-	}
-	f.only = (...info) => {
-	    numRegistered += 1
-	    return orchestrator.registerScenario.only(...info)
-	}
-	return f
-    }
-
-    // Tee up all of the available Scenario tests
-    require('./smoke')(registerer(orchestratorSimple))
-
-    return numRegistered
+// Check to see that we haven't accidentally disabled a bunch of scenarios
+const num = orchestrator.numRegistered()
+if (num < MIN_EXPECTED_SCENARIOS) {
+  console.error(`Expected at least ${MIN_EXPECTED_SCENARIOS} scenarios, but only ${num} were registered!`)
+  process.exit(1)
+}
+else {
+  console.log(`Registered ${num} scenarios (at least ${MIN_EXPECTED_SCENARIOS} were expected)`)
 }
 
-// Alice owes fees at/above the fee payment threshold; she initiates payment of these fees.
-
-// Alice sees here .fees reduce to 0 and her .payable has increased by fees amount, then (after fee
-// collection is complete), her .balance and .payable reduces by the fee payment amount, and the fee
-// payment transaction is complete in her transaction history.
-
-const runScenarioTests = async () => {
-  const alice = await spawnConductor('alice', 3000)
-  await orchestratorSimple.registerConductor({name: 'alice', url: 'http://0.0.0.0:3000'})
-  const bob = await spawnConductor('bob', 4000)
-  await orchestratorSimple.registerConductor({name: 'bob', url: 'http://0.0.0.0:4000'})
-  const carol = await spawnConductor('carol', 5000)
-  await orchestratorSimple.registerConductor({name: 'carol', url: 'http://0.0.0.0:5000'})
-
-  const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-  console.log("Waiting for conductors to settle...")
-  await delay(5000)
-  console.log("Ok, starting tests!")
-
-  await orchestratorSimple.run()
-
-  alice.kill()
-  bob.kill()
-  carol.kill()
-}
-
-const run = async () => {
-    const num = registerAllScenarios()
-    
-    // Check to see that we haven't accidentally disabled a bunch of scenarios
-    if (num < MIN_EXPECTED_SCENARIOS) {
-	console.error(`Expected at least ${MIN_EXPECTED_SCENARIOS}, but only ${num} were registered!`)
-	process.exit(1)
-    } else {
-	console.log(`Registered ${num} scenarios (at least ${MIN_EXPECTED_SCENARIOS} were expected)`)
-    }
-
-    await runScenarioTests() // Run try-o-rama tests
-    process.exit()
-}
-
-run()
+orchestrator.run().then(stats => {
+  console.log("All done.")
+})

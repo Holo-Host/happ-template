@@ -4,8 +4,13 @@
 # Building requires a nix-shell, so either prefix your desired target with `make nix-...`, or enter
 # a `nix-shell` and then run `make ...`
 # 
+# This Makefile is primarily instructional; you can simply enter the Nix environment for
+# holochain-rust development (supplied by holo=nixpkgs; see pkgs.nix) via `nix-shell` and run `hc
+# test` directly, or build a target directly (see default.nix), eg. `nix-build -A happ-example`.
+# 
 SHELL		= bash
 DNANAME		= happ-example
+DNAZOME		= example
 DNA		= dist/$(DNANAME).dna.json
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
@@ -14,22 +19,16 @@ all: nix-test
 
 # nix-test, nix-install, ...
 #
-# Provides a nix-shell environment, and runs the desired Makefile target, using the holo.host and
-# nixos.org binary caches.
-#
-export CACHE_KEYS
+# Provides a nix-shell environment, and runs the desired Makefile target.  It is recommended that
+# you add `substituters = ...` and `trusted-public-keys = ...` to your nix.conf (see README.md), to
+# take advantage of cached Nix and Holo build assets.
 nix-%:
-	nix-shell \
-	    --pure \
-	    --option substituters 'https://cache.holo.host https://cache.nixos.org' \
-	    --option trusted-public-keys \
-	      'cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' \
-	    --run "make $*"
+	nix-shell --pure --run "make $*"
 
 # Internal targets; require a Nix environment in order to be deterministic.
-# - Uses the version of `hc`, `holochain` on the system PATH.
+# - Uses the version of `hc`, `holochain`, `sim2h`, ... on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
-.PHONY:		rebuild install build test test-unit test-e2e
+.PHONY:		rebuild install build
 rebuild:	clean build
 
 install:	build
@@ -41,28 +40,30 @@ build:		$(DNA)
 # DNA's name, then this name is used by default, and the output directory is
 # created automatically.
 $(DNA):
-	hc package --strip-meta
+	hc package
 
+.PHONY: test test-unit test-e2e test-stress test-sim2h test-node
 test:		test-unit test-e2e
 
-# test-unit -- Run Rust unit tests via Cargo
+# test-unit -- Run Rust unit tests
 test-unit:
 	RUST_BACKTRACE=1 cargo test \
-	    --manifest-path zomes/example/code/Cargo.toml \
+	    --manifest-path zomes/$(DNAZOME)/code/Cargo.toml \
 	    -- --nocapture
 
-# test-e2e -- Uses dist/$(DNANAME).dna.json; install test JS dependencies, and run end-to-end tests
-test-e2e:	$(DNA)
-	( cd test && npm install ) \
-	  && RUST_BACKTRACE=1 hc test \
-	    | test/node_modules/faucet/bin/cmd.js
+# End-to-end test of DNA.  Runs a sim2h_server on localhost:9000; the default expected by `hc test`
+test-e2e:	$(DNA) test-sim2h test-node
+	@echo "Starting Scenario tests..."; \
+	    RUST_BACKTRACE=1 hc test \
+	        | test/node_modules/faucet/bin/cmd.js
 
-# doc-all, doc/*.html -- Convert any Org-mode documents to HTML
-.PHONY: doc-all
-doc-all: $(addsuffix .html, $(basename $(wildcard doc/*.org)))
+test-node:
+	@echo "Setting up Scenario/Stress test Javascript..."; \
+	    cd test && npm install
 
-doc/%.html: doc/%.org
-	emacs $< --batch -f org-html-export-to-html --kill
+test-sim2h:
+	@echo "Starting sim2h_server on localhost:9000 (may already be running)..."; \
+	    sim2h_server -p 9000 &
 
 # Generic targets; does not require a Nix environment
 .PHONY: clean
@@ -72,4 +73,4 @@ clean:
 	    test/node_modules \
 	    .cargo \
 	    target \
-	    zomes/example/code/target
+	    zomes/$(DNAZOME)/code/target
