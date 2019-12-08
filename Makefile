@@ -48,7 +48,6 @@ test:		test-unit test-e2e
 # test-unit -- Run Rust unit tests
 test-unit:
 	RUST_BACKTRACE=1 cargo test \
-	    --manifest-path zomes/$(DNAZOME)/code/Cargo.toml \
 	    -- --nocapture
 
 # End-to-end test of DNA.  Runs a sim2h_server on localhost:9000; the default expected by `hc test`
@@ -72,5 +71,4 @@ clean:
 	    dist \
 	    test/node_modules \
 	    .cargo \
-	    target \
-	    zomes/$(DNAZOME)/code/target
+	    target

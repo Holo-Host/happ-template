@@ -2,4 +2,4 @@
 /holochain-rust
 node_modules/
 result*
-target
+target/**
