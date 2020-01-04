@@ -8,7 +8,7 @@ jobs:
     docker:
       - image: nixos/nix
     # Required because hc package default DNA name is working directory name
-    working_directory: ~/happ-example
+    working_directory: ~/happ-template
     steps:
       - checkout
       - run: |

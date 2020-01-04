@@ -13,7 +13,12 @@ in
     name = "happ-example";
     src = gitignoreSource ./.;
 
-    nativeBuildInputs = []
+    nativeBuildInputs = [
+      cmake # required by wabt
+      binaryen
+      wasm-gc
+      wabt
+    ]
     ++ lib.optionals stdenv.isDarwin [ CoreServices ];
   };
 }

@@ -7,6 +7,7 @@ edition = "2018"
 boolinator = "2.4.0"
 hdk = { path = "../../../holochain-rust/crates/hdk" }
 holochain_wasm_utils = { path = "../../../holochain-rust/crates/wasm_utils" }
+hdk_proc_macros = { path = "../../../holochain-rust/crates/hdk_v2" }
 holochain_json_derive = "=0.0.17"
 serde = "=1.0.89"
 serde_json = { version = "=1.0.39", features = [ "preserve_order" ] }

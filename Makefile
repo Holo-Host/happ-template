@@ -6,10 +6,10 @@
 # 
 # This Makefile is primarily instructional; you can simply enter the Nix environment for
 # holochain-rust development (supplied by holo=nixpkgs; see pkgs.nix) via `nix-shell` and run `hc
-# test` directly, or build a target directly (see default.nix), eg. `nix-build -A happ-example`.
+# test` directly, or build a target directly (see default.nix), eg. `nix-build -A happ-template`.
 # 
 SHELL		= bash
-DNANAME		= happ-example
+DNANAME		= happ-template
 DNAZOME		= example
 DNA		= dist/$(DNANAME).dna.json
 
@@ -50,15 +50,17 @@ test-unit:
 	RUST_BACKTRACE=1 cargo test \
 	    -- --nocapture
 
+test-dna:	$(DNA)
+
 # End-to-end test of DNA.  Runs a sim2h_server on localhost:9000; the default expected by `hc test`
-test-e2e:	$(DNA) test-sim2h test-node
+test-e2e:	test-dna test-sim2h test-node
 	@echo "Starting Scenario tests..."; \
 	    RUST_BACKTRACE=1 hc test \
-	        | test/node_modules/faucet/bin/cmd.js
+	        | node test/node_modules/faucet/bin/cmd.js
 
 test-node:
 	@echo "Setting up Scenario/Stress test Javascript..."; \
-	    cd test && npm install
+	    cd test && [ -d node_modules ] || npm install
 
 test-sim2h:
 	@echo "Starting sim2h_server on localhost:9000 (may already be running)..."; \
