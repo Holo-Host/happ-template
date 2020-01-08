@@ -1,7 +1,7 @@
 const path = require('path')
 const { Config } = require('@holochain/tryorama')
 
-const dnaName = "happ-example"
+const dnaName = "happ-template"
 const dnaId = "example"
 
 const dnaPath = path.join(__dirname, `../dist/${dnaName}.dna.json`)
